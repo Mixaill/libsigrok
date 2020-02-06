@@ -237,6 +237,12 @@ src_libdrivers_la_SOURCES += \
 	src/hardware/atten-pps3xxx/protocol.c \
 	src/hardware/atten-pps3xxx/api.c
 endif
+if HW_AURIS_B480
+src_libdrivers_la_SOURCES += \
+	src/hardware/auris-b480/protocol.h \
+	src/hardware/auris-b480/protocol.c \
+	src/hardware/auris-b480/api.c
+endif
 if HW_BAYLIBRE_ACME
 src_libdrivers_la_SOURCES += \
 	src/hardware/baylibre-acme/protocol.h \
