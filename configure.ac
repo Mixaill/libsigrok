@@ -138,6 +138,8 @@ AS_IF([test "x$sr_have_libieee1284" = xyes],
 
 SR_ARG_OPT_PKG([libgio], [LIBGIO], , [gio-2.0 >= 2.24.0])
 
+SR_ARG_OPT_PKG([libauris], [LIBAURIS], , [libauris >= 4.0.0])
+
 # See if any of the (potentially platform specific) libs are available
 # which provide some means of Bluetooth communication.
 AS_IF([test "x$sr_have_libbluez" = xyes],
@@ -257,7 +259,7 @@ SR_DRIVER([Appa 55II], [appa-55ii], [serial_comm])
 SR_DRIVER([Arachnid Labs Re:load Pro], [arachnid-labs-re-load-pro], [serial_comm])
 SR_DRIVER([ASIX SIGMA/SIGMA2], [asix-sigma], [libftdi])
 SR_DRIVER([Atten PPS3xxx], [atten-pps3xxx], [serial_comm])
-SR_DRIVER([Auris B480], [auris-b480])
+SR_DRIVER([Auris B480], [auris-b480], [libauris])
 SR_DRIVER([BayLibre ACME], [baylibre-acme], [sys_timerfd_h])
 SR_DRIVER([BeagleLogic], [beaglelogic], [sys_mman_h sys_ioctl_h])
 SR_DRIVER([Brymen DMM], [brymen-dmm], [serial_comm])
