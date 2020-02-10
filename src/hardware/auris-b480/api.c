@@ -20,23 +20,62 @@
 #include <config.h>
 #include "protocol.h"
 
+#include "libauris_device_b480_api.h"
+
 static struct sr_dev_driver auris_b480_driver_info;
+
+static const uint32_t scanopts[] = {
+};
+
+static const uint32_t drvopts[] = {
+	SR_CONF_OSCILLOSCOPE
+};
+
+static const uint32_t devopts[] = {
+};
+
+
+static const char *channel_names[] = {
+	"CH1", "CH2", "CH3", "CH4", 
+	"CH5", "CH6", "CH7", "CH8"
+};
 
 static GSList *scan(struct sr_dev_driver *di, GSList *options)
 {
-	struct drv_context *drvc;
+	struct sr_dev_inst* sdi;
 	GSList *devices;
+	uint32_t dev_count;
 
 	(void)options;
 
+	if(libauris_device_b480_getcount(&dev_count) != LIBAURIS_DEVICE_RET_OK){
+		return NULL;
+	}
+
 	devices = NULL;
-	drvc = di->context;
-	drvc->instances = NULL;
+    for(uint32_t dev_idx=0; dev_idx<dev_count; dev_idx++){
+		sdi = g_malloc0(sizeof(struct sr_dev_inst));
+		sdi->driver = &auris_b480_driver_info;
+		sdi->status = SR_ST_INACTIVE;
+		sdi->inst_type = SR_INST_USB;
+		sdi->vendor = g_strdup("AURIS");
+		sdi->model = g_strdup("B-480");
+		sdi->version = NULL;
+		sdi->serial_num = g_strdup("TODO");
+		sdi->connection_id = g_strdup("TODO");
+		for(int i = 0 ; i < 8; i++) {
+			sr_channel_new(sdi, i, SR_CHANNEL_ANALOG, TRUE, channel_names[i]);
+		}
+		sdi->channel_groups = NULL;
+	
+		sdi->conn = NULL;
+		sdi->priv = g_malloc0(sizeof(struct dev_context));
+		sdi->session = NULL;
 
-	/* TODO: scan for devices, either based on a SR_CONF_CONN option
-	 * or on a USB scan. */
+		devices = g_slist_append(devices, sdi);
+	}
 
-	return devices;
+	return std_scan_complete(di, devices);
 }
 
 static int dev_open(struct sr_dev_inst *sdi)
@@ -98,20 +137,15 @@ static int config_set(uint32_t key, GVariant *data,
 static int config_list(uint32_t key, GVariant **data,
 	const struct sr_dev_inst *sdi, const struct sr_channel_group *cg)
 {
-	int ret;
-
-	(void)sdi;
-	(void)data;
-	(void)cg;
-
-	ret = SR_OK;
 	switch (key) {
-	/* TODO */
+	case SR_CONF_SCAN_OPTIONS:
+	case SR_CONF_DEVICE_OPTIONS:
+		return STD_CONFIG_LIST(key, data, sdi, cg, scanopts, drvopts, devopts);
 	default:
 		return SR_ERR_NA;
 	}
 
-	return ret;
+	return SR_OK;
 }
 
 static int dev_acquisition_start(const struct sr_dev_inst *sdi)
@@ -135,7 +169,7 @@ static int dev_acquisition_stop(struct sr_dev_inst *sdi)
 
 static struct sr_dev_driver auris_b480_driver_info = {
 	.name = "auris-b480",
-	.longname = "Auris B480",
+	.longname = "Auris B-480",
 	.api_version = 1,
 	.init = std_init,
 	.cleanup = std_cleanup,
