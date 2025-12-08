@@ -99,7 +99,7 @@ static void LIBUSB_CALL receive_transfer(struct libusb_transfer *transfer)
 			g_async_queue_push(devc->raw_data_queue, array);
 		}
 
-		if (devc->samples_got_nbytes +
+		if (!devc->trigger_fired || devc->samples_got_nbytes +
 			    devc->num_transfers_used *
 				    devc->per_transfer_nbytes <
 		    devc->samples_need_nbytes) {
@@ -126,7 +126,7 @@ static void LIBUSB_CALL receive_transfer(struct libusb_transfer *transfer)
 		break;
 	}
 
-	if (devc->num_transfers_completed &&
+	if (devc->trigger_fired && devc->num_transfers_completed &&
 	    (double)transfers_reached_duration / SR_KHZ(1) >
 		    (TRANSFERS_DURATION_TOLERANCE + 1) *
 			    devc->per_transfer_duration) {
