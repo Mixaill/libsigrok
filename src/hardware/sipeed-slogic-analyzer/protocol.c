@@ -58,7 +58,7 @@ static void LIBUSB_CALL receive_transfer(struct libusb_transfer *transfer)
 		devc->transfers_reached_nbytes +=
 			devc->transfers_reached_nbytes_latest;
 
-		if (transfer->actual_length >
+		if (devc->trigger_fired && transfer->actual_length >
 		    devc->samples_need_nbytes - devc->samples_got_nbytes)
 			transfer->actual_length = devc->samples_need_nbytes -
 						  devc->samples_got_nbytes;
@@ -99,7 +99,10 @@ static void LIBUSB_CALL receive_transfer(struct libusb_transfer *transfer)
 			g_async_queue_push(devc->raw_data_queue, array);
 		}
 
-		if (!devc->trigger_fired || devc->samples_got_nbytes +
+		if (!devc->trigger_fired)
+			devc->samples_got_nbytes = 0;
+
+		if (devc->samples_got_nbytes +
 			    devc->num_transfers_used *
 				    devc->per_transfer_nbytes <
 		    devc->samples_need_nbytes) {
@@ -126,7 +129,7 @@ static void LIBUSB_CALL receive_transfer(struct libusb_transfer *transfer)
 		break;
 	}
 
-	if (devc->trigger_fired && devc->num_transfers_completed &&
+	if (devc->num_transfers_completed &&
 	    (double)transfers_reached_duration / SR_KHZ(1) >
 		    (TRANSFERS_DURATION_TOLERANCE + 1) *
 			    devc->per_transfer_duration) {
@@ -230,11 +233,9 @@ static int handle_events(int fd, int revents, void *cb_data)
 				devc->model->submit_raw_data(
 					array->data, array->len, sdi);
 			} else if (devc->stl) {
-				devc->samples_got_nbytes = 0;
 				extern int slogic_soft_trigger_raw_data(void *data, size_t len, const struct sr_dev_inst *sdi);
 				int sent_samples = slogic_soft_trigger_raw_data(array->data, array->len, sdi);
 				if (sent_samples) {
-					devc->samples_got_nbytes += sent_samples * devc->cur_samplechannel / 8;
 					devc->trigger_fired = TRUE;
 				}
 			}

@@ -722,21 +722,41 @@ int slogic_soft_trigger_raw_data(void *data, size_t len,
 		len *= nsp_in_bytes; // need reshape
 	}
 
+	// // debug raw data
+	// sr_session_send(sdi, &(struct sr_datafeed_packet){
+	// 				.type = SR_DF_LOGIC,
+	// 				.payload = &(struct sr_datafeed_logic){
+	// 					.length = len,
+	// 					.unitsize = (nCh + 7) / 8,
+	// 					.data = ptr,
+	// 				} });
+
 	int pre_trigger_samples;
 	devc->stl->unitsize = uintsize;
 	int64_t trigger_offset = soft_trigger_logic_check(devc->stl, ptr, len, &pre_trigger_samples);
 	if (trigger_offset > -1) {
-		ret += pre_trigger_samples;
+		ret += pre_trigger_samples * uintsize;
+		if (ret) {
+			int need = devc->samples_need_nbytes - devc->samples_got_nbytes - ret;
 
-		sr_session_send(sdi, &(struct sr_datafeed_packet){
-				     .type = SR_DF_LOGIC,
-				     .payload = &(struct sr_datafeed_logic){
-					     .length = len - trigger_offset * uintsize,
-					     .unitsize = uintsize,
-					     .data = ptr + trigger_offset * uintsize,
-				     } });
+			if (need > 0) {
+				int remain = len - trigger_offset * uintsize;
+				if (need < remain)
+					remain = need;
 
-		ret += len / uintsize - trigger_offset;
+				sr_session_send(sdi, &(struct sr_datafeed_packet){
+							.type = SR_DF_LOGIC,
+							.payload = &(struct sr_datafeed_logic){
+								.length = remain,
+								.unitsize = uintsize,
+								.data = ptr + trigger_offset * uintsize,
+							} });
+
+				ret += remain;
+			}
+
+			devc->samples_got_nbytes += ret;
+		}
 	}
 
 	if (nCh < 8)
