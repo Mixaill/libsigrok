@@ -51,12 +51,25 @@ static void LIBUSB_CALL receive_transfer(struct libusb_transfer *transfer)
 	case LIBUSB_TRANSFER_COMPLETED: /* normal case */
 	case LIBUSB_TRANSFER_TIMED_OUT: /* may have received some data */
 	{
+		int first_here = devc->transfers_reached_time_latest == devc->transfers_reached_time_start;
 		devc->transfers_reached_time_latest =
 			transfers_reached_time_now;
 
 		devc->transfers_reached_nbytes_latest = transfer->actual_length;
 		devc->transfers_reached_nbytes +=
 			devc->transfers_reached_nbytes_latest;
+
+		// remove 2 samples for hardware bug workaround
+		if (first_here) {
+			size_t drop_bytes = (2*devc->cur_samplechannel/8)?:1;
+			if (transfer->actual_length >= drop_bytes) {
+				transfer->actual_length -= drop_bytes;
+				memmove(transfer->buffer, transfer->buffer + drop_bytes,
+					transfer->actual_length);
+			} else {
+				devc->transfers_reached_time_latest = devc->transfers_reached_time_start;
+			}
+		}
 
 		if (devc->trigger_fired && transfer->actual_length >
 		    devc->samples_need_nbytes - devc->samples_got_nbytes)
