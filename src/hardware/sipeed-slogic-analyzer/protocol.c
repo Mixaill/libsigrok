@@ -59,9 +59,9 @@ static void LIBUSB_CALL receive_transfer(struct libusb_transfer *transfer)
 		devc->transfers_reached_nbytes +=
 			devc->transfers_reached_nbytes_latest;
 
-		// remove 2 samples for hardware bug workaround
+		// remove 32bit for hardware bug workaround
 		if (first_here) {
-			size_t drop_bytes = (2*devc->cur_samplechannel/8)?:1;
+			const size_t drop_bytes = 4;
 			if (transfer->actual_length >= drop_bytes) {
 				transfer->actual_length -= drop_bytes;
 				memmove(transfer->buffer, transfer->buffer + drop_bytes,
