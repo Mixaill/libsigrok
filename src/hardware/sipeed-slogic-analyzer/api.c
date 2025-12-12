@@ -115,7 +115,12 @@ static const uint64_t samplerates_slogic16u3[] = {
 };
 
 static const uint64_t samplechannels_slogic16u3[] = { /*2, */4, 8, 16 };
-static const uint64_t limit_samplerates_slogic16u3[] = { /*SR_MHZ(1500), */SR_MHZ(800), SR_MHZ(400), SR_MHZ(200) };
+static const uint64_t limit_samplerates_slogic16u3[] = 
+#ifdef _WIN32
+	{ /*SR_MHZ(1500), */SR_MHZ(400), SR_MHZ(200), SR_MHZ(100) };
+#else
+	{ /*SR_MHZ(1500), */SR_MHZ(800), SR_MHZ(400), SR_MHZ(200) };
+#endif
 
 static const char *patterns[] = {
 	[PATTERN_MODE_NOMAL] = "PATTERN_MODE_NOMAL",
