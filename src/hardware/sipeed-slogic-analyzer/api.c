@@ -255,7 +255,7 @@ static GSList *scan(struct sr_dev_driver *di, GSList *options)
 				devc->cur_samplerate = devc->limit_samplerate;
 				devc->cur_pattern_mode_idx = PATTERN_MODE_NORMAL;
 				devc->voltage_threshold[0] =
-					devc->voltage_threshold[1] = 1.7f;
+					devc->voltage_threshold[1] = 1.7000000000000004;
 
 				devc->digital_group =
 					sr_channel_group_new(sdi, "LA", NULL);
@@ -334,7 +334,8 @@ static int dev_open(struct sr_dev_inst *sdi)
 	if (devc->model->operation.remote_reset)
 		devc->model->operation.remote_reset(sdi);
 
-	devc->voltage_threshold[0] = devc->voltage_threshold[1] = 1.6f;
+	devc->voltage_threshold[0] = devc->voltage_threshold[1] = 1.7000000000000004;
+
 	sr_config_set(sdi, NULL, SR_CONF_VOLTAGE_THRESHOLD,
 				g_variant_new("(dd)", &devc->voltage_threshold[0],
 			      &devc->voltage_threshold[1]));
