@@ -476,7 +476,7 @@ AS_IF([test "x$HAVE_DOXYGEN" != xyes],
 SR_SEARCH_LIBS([SR_EXTRA_CXX_LIBS], [__cxa_throw], [gnustl_shared])
 
 # Python is needed for the C++ bindings.
-AM_PATH_PYTHON([3.8],
+AM_PATH_PYTHON([3.6],
 	[HAVE_PYTHON=yes],
 	[HAVE_PYTHON=no
 	SR_APPEND([sr_cxx_missing], [', '], [Python])])
