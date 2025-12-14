@@ -91,8 +91,7 @@ static void LIBUSB_CALL receive_transfer(struct libusb_transfer *transfer)
 		       (double)transfers_all_duration / SR_KHZ(1));
 
 		/* TODO: move out submit to ensure continuous transfers */
-		if (devc->raw_data_queue &&
-		    devc->cur_pattern_mode_idx != PATTERN_MODE_TEST_MAX_SPEED) {
+		if (devc->raw_data_queue) {
 			uint8_t *d = transfer->buffer;
 			size_t len = transfer->actual_length;
 			// sr_dbg("HEAD: %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x

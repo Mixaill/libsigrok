@@ -123,10 +123,9 @@ static const uint64_t limit_samplerates_slogic16u3[] =
 #endif
 
 static const char *patterns[] = {
-	[PATTERN_MODE_NOMAL] = "PATTERN_MODE_NOMAL",
-	[PATTERN_MODE_TEST_MAX_SPEED] = "PATTERN_MODE_TEST_MAX_SPEED",
-	[PATTERN_MODE_TEST_HARDWARE_USB_MAX_SPEED] = "PATTERN_MODE_TEST_HARDWARE_USB_MAX_SPEED",
-	[PATTERN_MODE_TEST_HARDWARE_EMU_DATA] = "PATTERN_MODE_TEST_HARDWARE_EMU_DATA",
+	[PATTERN_MODE_NORMAL] = "Normal",
+	[PATTERN_MODE_TEST_HARDWARE_USB_MAX_SPEED] = "USB connection test",
+	[PATTERN_MODE_TEST_HARDWARE_EMU_DATA] = "Emulation",
 };
 
 static const int32_t trigger_matches[] = {
@@ -254,7 +253,7 @@ static GSList *scan(struct sr_dev_driver *di, GSList *options)
 				devc->cur_samplechannel =
 					devc->limit_samplechannel;
 				devc->cur_samplerate = devc->limit_samplerate;
-				devc->cur_pattern_mode_idx = PATTERN_MODE_NOMAL;
+				devc->cur_pattern_mode_idx = PATTERN_MODE_NORMAL;
 				devc->voltage_threshold[0] =
 					devc->voltage_threshold[1] = 1.7f;
 
@@ -492,7 +491,7 @@ static int config_set(uint32_t key, GVariant *data,
 			sr_warn("unsupported model: %s.", devc->model->name);
 			break;
 		}
-		if (devc->cur_pattern_mode_idx == PATTERN_MODE_NOMAL) {
+		if (devc->cur_pattern_mode_idx == PATTERN_MODE_NORMAL) {
 			if (devc->model->operation.remote_reset)
 				devc->model->operation.remote_reset(sdi);
 			slogic16U3_remote_test_mode(sdi, 0x0);
