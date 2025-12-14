@@ -903,6 +903,8 @@ static int slogic16U3_remote_test_mode(const struct sr_dev_inst *sdi, uint32_t m
 			sr_dbg("Succeed to configure test_mode.");
 		}
 	}
+
+	return SR_OK;
 }
 
 static int slogic16U3_remote_reset(const struct sr_dev_inst *sdi) {
