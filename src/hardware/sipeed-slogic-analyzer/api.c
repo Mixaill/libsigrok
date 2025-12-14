@@ -34,12 +34,12 @@ static const uint32_t drvopts[] = {
 
 static const uint32_t devopts[] = {
 	SR_CONF_CONTINUOUS,
-	SR_CONF_BUFFERSIZE | SR_CONF_GET | SR_CONF_SET | SR_CONF_LIST,
 	SR_CONF_LIMIT_SAMPLES | SR_CONF_GET | SR_CONF_SET,
 	SR_CONF_PATTERN_MODE | SR_CONF_GET | SR_CONF_SET | SR_CONF_LIST,
 	SR_CONF_SAMPLERATE | SR_CONF_GET | SR_CONF_SET | SR_CONF_LIST,
 	SR_CONF_TRIGGER_MATCH | SR_CONF_LIST,
 	SR_CONF_VOLTAGE_THRESHOLD | SR_CONF_GET | SR_CONF_SET | SR_CONF_LIST,
+	SR_CONF_NUM_LOGIC_CHANNELS | SR_CONF_GET | SR_CONF_SET | SR_CONF_LIST
 };
 
 static const uint64_t samplerates_slogiccombo8[] = {
@@ -65,7 +65,7 @@ static const uint64_t samplerates_slogiccombo8[] = {
 	SR_MHZ(160),
 };
 
-static const uint64_t samplechannels_slogiccombo8[] = { 2, 4, 8 };
+static const int32_t samplechannels_slogiccombo8[] = { 2, 4, 8 };
 static const uint64_t limit_samplerates_slogiccombo8[] = { SR_MHZ(160), SR_MHZ(80), SR_MHZ(40) };
 
 static const uint64_t samplerates_slogic16u3[] = {
@@ -114,7 +114,7 @@ static const uint64_t samplerates_slogic16u3[] = {
 	// SR_MHZ(1500),
 };
 
-static const uint64_t samplechannels_slogic16u3[] = { /*2, */4, 8, 16 };
+static const int32_t samplechannels_slogic16u3[] = { /*2, */4, 8, 16 };
 static const uint64_t limit_samplerates_slogic16u3[] = 
 #ifdef _WIN32
 	{ /*SR_MHZ(1500), */SR_MHZ(400), SR_MHZ(200), SR_MHZ(100) };
@@ -246,7 +246,7 @@ static GSList *scan(struct sr_dev_driver *di, GSList *options)
 				devc->limit_samplechannel = devc->model->samplechannel_table[
 					devc->model->samplechannel_table_size - 1];
 				devc->limit_samplerate = devc->model->limit_samplerate_table[
-					std_u64_idx(g_variant_new_uint64(devc->limit_samplechannel),
+					std_i32_idx(g_variant_new_int32(devc->limit_samplechannel),
 						devc->model->samplechannel_table, devc->model->samplechannel_table_size)
 				];
 
@@ -396,8 +396,8 @@ static int config_get(uint32_t key, GVariant **data,
 	case SR_CONF_SAMPLERATE:
 		*data = g_variant_new_uint64(devc->cur_samplerate);
 		break;
-	case SR_CONF_BUFFERSIZE:
-		*data = g_variant_new_uint64(devc->cur_samplechannel);
+	case SR_CONF_NUM_LOGIC_CHANNELS:
+		*data = g_variant_new_int32(devc->cur_samplechannel);
 		break;
 	case SR_CONF_PATTERN_MODE:
 		*data = g_variant_new_string(
@@ -444,16 +444,16 @@ static int config_set(uint32_t key, GVariant *data,
 		}
 
 		break;
-	case SR_CONF_BUFFERSIZE:
-		if (std_u64_idx(data, devc->model->samplechannel_table, devc->model->samplechannel_table_size) < 0) {
+	case SR_CONF_NUM_LOGIC_CHANNELS:
+		if (std_i32_idx(data, devc->model->samplechannel_table, devc->model->samplechannel_table_size) < 0) {
 			devc->cur_samplechannel = devc->limit_samplechannel;
 			sr_warn("Reach limit or not supported, wrap to %uch.",
 				devc->limit_samplechannel);
 		} else {
-			devc->cur_samplechannel = g_variant_get_uint64(data);
+			devc->cur_samplechannel = g_variant_get_int32(data);
 
 			devc->limit_samplerate = devc->model->limit_samplerate_table[
-				std_u64_idx(g_variant_new_uint64(devc->cur_samplechannel),
+				std_i32_idx(g_variant_new_int32(devc->cur_samplechannel),
 					devc->model->samplechannel_table, devc->model->samplechannel_table_size)
 			];
 
@@ -523,7 +523,7 @@ int config_channel_set(const struct sr_dev_inst *sdi, struct sr_channel *ch, uns
 		return SR_OK;
 	}
 	
-	uint64_t new_samplechannel = devc->model->samplechannel_table[0];
+	int32_t new_samplechannel = devc->model->samplechannel_table[0];
 	for (GSList *l = devc->digital_group->channels; l;l = l->next) {
 		struct sr_channel *ch = l->data;
 		if(!ch->enabled || ch->index < new_samplechannel){
@@ -576,8 +576,8 @@ static int config_list(uint32_t key, GVariant **data,
 		if (NULL == devc->model)
 			ret = SR_ERR_ARG;
 		break;
-	case SR_CONF_BUFFERSIZE:
-		*data = std_gvar_array_u64(devc->model->samplechannel_table, devc->model->samplechannel_table_size);
+	case SR_CONF_NUM_LOGIC_CHANNELS:
+		*data = std_gvar_array_i32(devc->model->samplechannel_table, devc->model->samplechannel_table_size);
 		break;
 	case SR_CONF_PATTERN_MODE:
 		*data = g_variant_new_strv(ARRAY_AND_SIZE(patterns));

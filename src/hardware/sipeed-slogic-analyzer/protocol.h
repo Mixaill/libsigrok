@@ -46,7 +46,7 @@ struct slogic_model {
 	const uint16_t pid;
 	const uint8_t ep_in;
 	const uint64_t max_bandwidth; // limit by hardware
-	const uint64_t *samplechannel_table;
+	const int32_t *samplechannel_table;
 	const uint64_t samplechannel_table_size;
 	const uint64_t *limit_samplerate_table;
 	const uint64_t *samplerate_table;
@@ -67,13 +67,13 @@ struct dev_context {
 
 	struct {
 		uint64_t limit_samplerate;
-		uint64_t limit_samplechannel;
+		int32_t limit_samplechannel;
 	};
 
 	struct {
 		uint64_t cur_limit_samples;
 		uint64_t cur_samplerate;
-		uint64_t cur_samplechannel;
+		int32_t cur_samplechannel;
 		int64_t cur_pattern_mode_idx;
 	}; // configuration
 
