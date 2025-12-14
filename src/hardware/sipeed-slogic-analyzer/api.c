@@ -465,14 +465,10 @@ static int config_set(uint32_t key, GVariant *data,
 			for (GSList *l = devc->digital_group->channels; l;
 			     l = l->next) {
 				struct sr_channel *ch = l->data;
-				if (ch->type ==
-				    SR_CHANNEL_LOGIC) { /* Might as well do this now, these
+				if (ch->type == 
+					SR_CHANNEL_LOGIC) { /* Might as well do this now, these
                                                are static. */
-					sr_dev_channel_enable(
-						ch, (ch->index >=
-						     devc->cur_samplechannel) ?
-							    FALSE :
-							    TRUE);
+					ch->enabled = ch->index >= devc->cur_samplechannel ? FALSE : TRUE;
 				} else {
 					sr_warn("devc->digital_group->channels[%u] is not Logic?",
 						ch->index);
@@ -515,6 +511,42 @@ static int config_set(uint32_t key, GVariant *data,
 	}
 
 	return ret;
+}
+
+int config_channel_set(const struct sr_dev_inst *sdi, struct sr_channel *ch, unsigned int changes) {
+	struct dev_context *devc = sdi ? (sdi->priv) : NULL;
+	if(!devc || !devc->model || !devc->model->samplechannel_table || !devc->model->limit_samplerate_table){
+		return SR_ERR;
+	}
+	
+	if(changes != SR_CHANNEL_SET_ENABLED){
+		return SR_OK;
+	}
+	
+	uint64_t new_samplechannel = devc->model->samplechannel_table[0];
+	for (GSList *l = devc->digital_group->channels; l;l = l->next) {
+		struct sr_channel *ch = l->data;
+		if(!ch->enabled || ch->index < new_samplechannel){
+			continue;
+		}
+		for(unsigned int i = 0; i < devc->model->samplerate_table_size; i++){
+			if(devc->model->samplechannel_table[i] > ch->index){
+				new_samplechannel = devc->model->samplechannel_table[i];
+				break;
+			}
+		}
+	}
+
+	if(new_samplechannel > devc->cur_samplechannel){
+		devc->cur_samplechannel = new_samplechannel;
+		devc->limit_samplerate = devc->model->limit_samplerate_table[
+				std_i32_idx(g_variant_new_int32(devc->cur_samplechannel),
+					devc->model->samplechannel_table, devc->model->samplechannel_table_size)
+			];
+		if (devc->cur_samplerate > devc->limit_samplerate)
+			devc->cur_samplerate = devc->limit_samplerate;
+	}
+	return SR_OK;
 }
 
 static int config_list(uint32_t key, GVariant **data,
@@ -572,6 +604,7 @@ static struct sr_dev_driver sipeed_slogic_analyzer_driver_info = {
 	.scan = scan,
 	.dev_list = std_dev_list,
 	.dev_clear = std_dev_clear,
+	.config_channel_set = config_channel_set,
 	.config_get = config_get,
 	.config_set = config_set,
 	.config_list = config_list,
